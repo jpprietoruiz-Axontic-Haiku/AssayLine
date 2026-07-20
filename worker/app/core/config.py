@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     anthropic_api_key: str = ""
     max_upload_mb: int = 25
+    storage_dir: str = "./data/reports"
+    min_embedded_text_chars: int = 40
+    anthropic_vision_model: str = "claude-sonnet-5"
+    anthropic_agent_model: str = "claude-sonnet-5"
 
 
 @lru_cache

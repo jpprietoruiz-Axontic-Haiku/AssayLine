@@ -36,8 +36,12 @@ Diagrama Mermaid detallado y decisiones de diseño: ver `DECISIONS.md` (hito 6).
 ```
 worker/     FastAPI + agente de extracción + tests (pytest)
 dashboard/  React + Vite + TypeScript
-infra/      docker-compose (Postgres+Redis) + migraciones SQL
+infra/      docker-compose (Postgres+Redis)
 ```
+
+El schema de Postgres vive como migraciones de **Alembic** en `worker/alembic/`
+(fuente única de verdad, generadas a partir de los modelos SQLAlchemy en
+`worker/app/models/`).
 
 ## Desarrollo local
 
@@ -48,7 +52,9 @@ docker compose -f infra/docker-compose.yml up -d   # Postgres + Redis
 cd worker
 python -m venv .venv && .venv/Scripts/activate     # o source .venv/bin/activate
 pip install -e ".[dev]"
-uvicorn app.main:app --reload
+alembic upgrade head            # crea el schema en Postgres
+uvicorn app.main:app --reload   # API en :8000
+rq worker ingestion --url redis://localhost:6379/0   # worker de ingesta (otra terminal)
 
 cd ../dashboard
 npm install
@@ -65,7 +71,7 @@ cd dashboard && npm run build   # incluye typecheck (tsc -b)
 ## Hitos
 
 1. [x] Scaffolding monorepo + schema Postgres + docker-compose + CI
-2. [ ] Ingesta: `POST /reports` + clasificación + OCR/visión
+2. [x] Ingesta: `POST /reports` + clasificación + OCR/visión
 3. [ ] Agente de extracción con tool-calling + validación Pydantic
 4. [ ] Motor de anomalías + informes sintéticos de demo
 5. [ ] Dashboard de revisión (lado a lado, edición inline, export)

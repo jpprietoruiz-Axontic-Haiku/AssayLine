@@ -26,5 +26,8 @@ Thumbs.db
 # Postgres/demo artifacts
 *.log
 
+# Storage local de informes subidos (contenido de usuario, no versionado)
+worker/data/
+
 # Planning docs (no publicar contexto de negocio interno en el repo público)
 /PROYECTO*.pdf
