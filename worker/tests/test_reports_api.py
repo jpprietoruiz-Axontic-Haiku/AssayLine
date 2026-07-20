@@ -17,10 +17,11 @@ def test_upload_pdf_with_embedded_text_is_classified_without_vision_call(
     report_id = response.json()["id"]
 
     detail = client.get(f"/reports/{report_id}").json()
-    assert detail["status"] == "transcribed"
+    assert detail["status"] == "extracted"
     assert detail["report_type"] == "certificate_of_analysis"
     assert detail["error_message"] is None
     assert calls == []  # embedded text was long enough; vision fallback not needed
+    assert detail["extraction"]["data"]["ph"]["value"] == 7.2
 
 
 def test_upload_image_falls_back_to_vision_transcription(client, monkeypatch) -> None:
@@ -35,7 +36,7 @@ def test_upload_image_falls_back_to_vision_transcription(client, monkeypatch) ->
     report_id = response.json()["id"]
 
     detail = client.get(f"/reports/{report_id}").json()
-    assert detail["status"] == "transcribed"
+    assert detail["status"] == "extracted"
     assert detail["report_type"] == "process_log"
 
 

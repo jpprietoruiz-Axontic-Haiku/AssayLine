@@ -72,7 +72,7 @@ cd dashboard && npm run build   # incluye typecheck (tsc -b)
 
 1. [x] Scaffolding monorepo + schema Postgres + docker-compose + CI
 2. [x] Ingesta: `POST /reports` + clasificación + OCR/visión
-3. [ ] Agente de extracción con tool-calling + validación Pydantic
+3. [x] Agente de extracción con tool-calling + validación Pydantic
 4. [ ] Motor de anomalías + informes sintéticos de demo
 5. [ ] Dashboard de revisión (lado a lado, edición inline, export)
 6. [ ] README senior + diagrama Mermaid + `DECISIONS.md`

@@ -26,10 +26,18 @@ def sync_queue():
     return Queue("ingestion", connection=connection, is_async=False)
 
 
+DEFAULT_EXTRACTION_RESULT = {
+    "fields": [{"name": "ph", "value": 7.2, "unit": None, "confidence": 0.9}]
+}
+
+
 @pytest.fixture()
 def client(monkeypatch, tmp_path, db_session_factory, sync_queue):
     monkeypatch.setattr(storage, "_base_dir", lambda: tmp_path / "reports")
     monkeypatch.setattr("app.services.pipeline.get_session_factory", lambda: db_session_factory)
+    monkeypatch.setattr(
+        "app.services.pipeline.run_extraction_agent", lambda *a, **k: DEFAULT_EXTRACTION_RESULT
+    )
 
     def override_get_db():
         db = db_session_factory()
