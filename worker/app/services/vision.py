@@ -11,11 +11,11 @@ _MEDIA_TYPES = {
 }
 
 TRANSCRIBE_PROMPT = (
-    "Transcribe todo el contenido visible de esta imagen de un informe tecnico "
-    "industrial o de laboratorio: texto, tablas (como texto delimitado), valores "
-    "numericos con sus unidades, y una descripcion de cualquier grafica o curva "
-    "(ejes, tendencia, valores aproximados de puntos clave). No interpretes ni "
-    "resumas: transcribe fielmente lo que ves, en texto plano."
+    "Transcribe all visible content in this image of an industrial or "
+    "laboratory technical report: text, tables (as delimited text), numeric "
+    "values with their units, and a description of any chart or curve (axes, "
+    "trend, approximate values of key points). Do not interpret or "
+    "summarize: transcribe faithfully what you see, in plain text."
 )
 
 _client: anthropic.Anthropic | None = None

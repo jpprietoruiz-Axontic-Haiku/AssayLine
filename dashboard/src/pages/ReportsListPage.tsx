@@ -8,9 +8,9 @@ import type { ReportListItem, ReportStatus } from '../api/types'
 import { TERMINAL_STATUSES } from '../api/types'
 
 const REPORT_TYPE_LABELS: Record<string, string> = {
-  certificate_of_analysis: 'Certificado de análisis',
-  process_log: 'Log de proceso',
-  unknown: 'Sin clasificar',
+  certificate_of_analysis: 'Certificate of analysis',
+  process_log: 'Process log',
+  unknown: 'Unclassified',
 }
 
 export function ReportsListPage() {
@@ -24,7 +24,7 @@ export function ReportsListPage() {
       setReports(data)
       setError(null)
     } catch {
-      setError('No se pudo cargar la lista de informes. ¿Está el worker corriendo?')
+      setError('Could not load the report list. Is the worker running?')
     }
   }, [])
 
@@ -43,9 +43,9 @@ export function ReportsListPage() {
     <div className="page">
       <header className="page-header">
         <div>
-          <h1>Informes</h1>
+          <h1>Reports</h1>
           <p className="page-subtitle">
-            Certificados de análisis y logs de proceso ingeridos por AssayLine.
+            Certificates of analysis and process logs ingested by AssayLine.
           </p>
         </div>
         <UploadForm onUploaded={(id) => navigate(`/reports/${id}`)} />
@@ -53,21 +53,21 @@ export function ReportsListPage() {
 
       {error && <p className="error-text">{error}</p>}
 
-      {reports === null && !error && <p>Cargando…</p>}
+      {reports === null && !error && <p>Loading…</p>}
 
       {reports !== null && reports.length === 0 && (
-        <p className="empty-state">Todavía no hay informes. Sube el primero arriba.</p>
+        <p className="empty-state">No reports yet. Upload the first one above.</p>
       )}
 
       {reports !== null && reports.length > 0 && (
         <table className="table">
           <thead>
             <tr>
-              <th>Archivo</th>
-              <th>Tipo</th>
-              <th>Estado</th>
-              <th>Anomalías</th>
-              <th>Subido</th>
+              <th>File</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Anomalies</th>
+              <th>Uploaded</th>
             </tr>
           </thead>
           <tbody>

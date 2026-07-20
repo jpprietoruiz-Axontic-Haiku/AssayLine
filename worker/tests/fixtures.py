@@ -14,10 +14,10 @@ def make_blank_png_bytes() -> bytes:
     return pixmap.tobytes("png")
 
 
-SYNTHETIC_CERTIFICATE_TEXT = """CERTIFICADO DE ANALISIS
-Producto: Reactivo XYZ
-Lote: ABC123
-Fecha: 2026-01-15
+SYNTHETIC_CERTIFICATE_TEXT = """CERTIFICATE OF ANALYSIS
+Product: Reagent XYZ
+Batch: ABC123
+Date: 2026-01-15
 pH: 7.2
-Pureza: 99.5 %
+Purity: 99.5 %
 """

@@ -1,12 +1,12 @@
 import type { ReportStatus } from '../api/types'
 
 const LABELS: Record<ReportStatus, string> = {
-  uploaded: 'Subido',
-  processing: 'Procesando',
-  transcribed: 'Transcrito',
-  extracted: 'Extraído',
-  reviewed: 'Revisado',
-  failed: 'Error',
+  uploaded: 'Uploaded',
+  processing: 'Processing',
+  transcribed: 'Transcribed',
+  extracted: 'Extracted',
+  reviewed: 'Reviewed',
+  failed: 'Failed',
 }
 
 export function StatusBadge({ status }: { status: ReportStatus }) {

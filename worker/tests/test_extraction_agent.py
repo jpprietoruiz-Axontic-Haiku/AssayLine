@@ -46,7 +46,7 @@ def test_agent_uses_tool_result_then_submits(db_session_factory) -> None:
     ]
     client = FakeClient(responses)
 
-    result = run_extraction_agent(db, "process_log", ["texto de la pagina"], client=client)
+    result = run_extraction_agent(db, "process_log", ["page text"], client=client)
 
     assert result == {"fields": [{"name": "mass", "value": 1.0, "unit": "g", "confidence": 0.95}]}
     assert len(client.messages.calls) == 2
@@ -77,7 +77,7 @@ def test_agent_reports_tool_errors_back_without_crashing(db_session_factory) -> 
     ]
     client = FakeClient(responses)
 
-    result = run_extraction_agent(db, "process_log", ["texto"], client=client)
+    result = run_extraction_agent(db, "process_log", ["text"], client=client)
 
     assert result is not None
     second_call_messages = client.messages.calls[1]["messages"]
@@ -96,7 +96,7 @@ def test_agent_returns_none_when_iterations_exhausted(db_session_factory) -> Non
     ]
     client = FakeClient(responses)
 
-    result = run_extraction_agent(db, "process_log", ["texto"], client=client)
+    result = run_extraction_agent(db, "process_log", ["text"], client=client)
 
     assert result is None
     assert len(client.messages.calls) == MAX_TOOL_ITERATIONS

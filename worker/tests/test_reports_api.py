@@ -26,7 +26,7 @@ def test_upload_pdf_with_embedded_text_is_classified_without_vision_call(
 
 def test_upload_image_falls_back_to_vision_transcription(client, monkeypatch) -> None:
     monkeypatch.setattr(
-        vision, "transcribe_page", lambda image_bytes, image_ext: "REGISTRO DE PROCESO: OK"
+        vision, "transcribe_page", lambda image_bytes, image_ext: "PROCESS LOG: OK"
     )
 
     png_bytes = make_blank_png_bytes()

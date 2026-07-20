@@ -6,112 +6,118 @@ DEMO_SPEC_PROFILES: list[dict] = [
     {"report_type": "certificate_of_analysis", "field": "ph", "min": 6.5, "max": 7.5, "unit": None},
     {
         "report_type": "certificate_of_analysis",
-        "field": "pureza_pct",
+        "field": "purity_pct",
         "min": 98.0,
         "max": 100.0,
         "unit": "%",
     },
     {
         "report_type": "certificate_of_analysis",
-        "field": "humedad_pct",
+        "field": "moisture_pct",
         "min": 0.0,
         "max": 2.0,
         "unit": "%",
     },
     {
         "report_type": "process_log",
-        "field": "temperatura_c",
+        "field": "temperature_c",
         "min": 70.0,
         "max": 90.0,
         "unit": "c",
     },
-    {"report_type": "process_log", "field": "presion_bar", "min": 1.0, "max": 3.0, "unit": "bar"},
-    {"report_type": "process_log", "field": "caudal_lpm", "min": 10.0, "max": 20.0, "unit": None},
+    {"report_type": "process_log", "field": "pressure_bar", "min": 1.0, "max": 3.0, "unit": "bar"},
+    {
+        "report_type": "process_log",
+        "field": "flow_rate_lpm",
+        "min": 10.0,
+        "max": 20.0,
+        "unit": None,
+    },
 ]
 
 DEMO_REPORTS: list[dict] = [
     {
-        "filename": "certificado_lote_CB-2026-014.pdf",
+        "filename": "certificate_batch_CB-2026-014.pdf",
         "report_type": "certificate_of_analysis",
         "text": (
-            "CERTIFICADO DE ANALISIS\n"
-            "Producto: Buffer Fosfato PB-7\n"
-            "Lote: CB-2026-014\n"
-            "Fecha de analisis: 2026-01-10\n"
-            "Analista: L. Fernandez\n\n"
-            "Resultados:\n"
+            "CERTIFICATE OF ANALYSIS\n"
+            "Product: Phosphate Buffer PB-7\n"
+            "Batch: CB-2026-014\n"
+            "Analysis date: 2026-01-10\n"
+            "Analyst: L. Fernandez\n\n"
+            "Results:\n"
             "pH: 7.1\n"
-            "Pureza: 99.2 %\n"
-            "Humedad: 0.8 %\n\n"
-            "Conclusion: Producto conforme a especificacion."
+            "Purity: 99.2 %\n"
+            "Moisture: 0.8 %\n\n"
+            "Conclusion: Product conforms to specification."
         ),
         "fields": [
             {"name": "ph", "value": 7.1, "unit": None, "confidence": 0.97},
-            {"name": "pureza_pct", "value": 99.2, "unit": "%", "confidence": 0.96},
-            {"name": "humedad_pct", "value": 0.8, "unit": "%", "confidence": 0.94},
+            {"name": "purity_pct", "value": 99.2, "unit": "%", "confidence": 0.96},
+            {"name": "moisture_pct", "value": 0.8, "unit": "%", "confidence": 0.94},
         ],
     },
     {
-        "filename": "certificado_lote_CB-2026-021.pdf",
+        "filename": "certificate_batch_CB-2026-021.pdf",
         "report_type": "certificate_of_analysis",
         "text": (
-            "CERTIFICADO DE ANALISIS\n"
-            "Producto: Solvente Etanolico ET-100\n"
-            "Lote: CB-2026-021\n"
-            "Fecha de analisis: 2026-01-15\n"
-            "Analista: R. Gomez\n\n"
-            "Resultados:\n"
+            "CERTIFICATE OF ANALYSIS\n"
+            "Product: Ethanolic Solvent ET-100\n"
+            "Batch: CB-2026-021\n"
+            "Analysis date: 2026-01-15\n"
+            "Analyst: R. Gomez\n\n"
+            "Results:\n"
             "pH: 5.8\n"
-            "Pureza: 97.85 %\n"
-            "Humedad: 1.2 %\n\n"
-            "Conclusion: Revisar lote - valores fuera de rango esperado."
+            "Purity: 97.85 %\n"
+            "Moisture: 1.2 %\n\n"
+            "Conclusion: Review batch - values outside expected range."
         ),
         "fields": [
             {"name": "ph", "value": 5.8, "unit": None, "confidence": 0.95},
-            {"name": "pureza_pct", "value": 97.85, "unit": "%", "confidence": 0.9},
-            {"name": "humedad_pct", "value": 1.2, "unit": "%", "confidence": 0.93},
+            {"name": "purity_pct", "value": 97.85, "unit": "%", "confidence": 0.9},
+            {"name": "moisture_pct", "value": 1.2, "unit": "%", "confidence": 0.93},
         ],
     },
     {
-        "filename": "log_proceso_L3_manana.pdf",
+        "filename": "process_log_L3_morning.pdf",
         "report_type": "process_log",
         "text": (
-            "REGISTRO DE PROCESO\n"
-            "Linea: Envasado L3\n"
-            "Turno: Manana\n"
-            "Fecha: 2026-01-12\n"
-            "Operario: J. Torres\n\n"
-            "Parametros de proceso:\n"
-            "Temperatura: 82.4 C\n"
-            "Presion: 2.1 bar\n"
-            "Caudal: 15.2 L/min\n\n"
-            "Observaciones: Operacion normal, sin incidencias."
+            "PROCESS LOG\n"
+            "Line: Packaging L3\n"
+            "Shift: Morning\n"
+            "Date: 2026-01-12\n"
+            "Operator: J. Torres\n\n"
+            "Process parameters:\n"
+            "Temperature: 82.4 C\n"
+            "Pressure: 2.1 bar\n"
+            "Flow rate: 15.2 L/min\n\n"
+            "Notes: Normal operation, no incidents."
         ),
         "fields": [
-            {"name": "temperatura_c", "value": 82.4, "unit": "c", "confidence": 0.96},
-            {"name": "presion_bar", "value": 2.1, "unit": "bar", "confidence": 0.95},
-            {"name": "caudal_lpm", "value": 15.2, "unit": None, "confidence": 0.94},
+            {"name": "temperature_c", "value": 82.4, "unit": "c", "confidence": 0.96},
+            {"name": "pressure_bar", "value": 2.1, "unit": "bar", "confidence": 0.95},
+            {"name": "flow_rate_lpm", "value": 15.2, "unit": None, "confidence": 0.94},
         ],
     },
     {
-        "filename": "log_proceso_L1_noche.pdf",
+        "filename": "process_log_L1_night.pdf",
         "report_type": "process_log",
         "text": (
-            "REGISTRO DE PROCESO\n"
-            "Linea: Esterilizacion L1\n"
-            "Turno: Noche\n"
-            "Fecha: 2026-01-18\n"
-            "Operario: M. Duarte\n\n"
-            "Parametros de proceso:\n"
-            "Temperatura: 96.7 C\n"
-            "Presion: 3.25 bar\n"
-            "Caudal: 14.0 L/min\n\n"
-            "Observaciones: Alarma de temperatura alta activada durante 12 minutos."
+            "PROCESS LOG\n"
+            "Line: Sterilization L1\n"
+            "Shift: Night\n"
+            "Date: 2026-01-18\n"
+            "Operator: M. Duarte\n\n"
+            "Process parameters:\n"
+            "Temperature: 96.7 C\n"
+            "Pressure: 3.25 bar\n"
+            "Flow rate: 14.0 L/min\n\n"
+            "Notes: High temperature alarm activated for 12 minutes."
         ),
         "fields": [
-            {"name": "temperatura_c", "value": 96.7, "unit": "c", "confidence": 0.97},
-            {"name": "presion_bar", "value": 3.25, "unit": "bar", "confidence": 0.9},
-            {"name": "caudal_lpm", "value": 14.0, "unit": None, "confidence": 0.95},
+            {"name": "temperature_c", "value": 96.7, "unit": "c", "confidence": 0.97},
+            {"name": "pressure_bar", "value": 3.25, "unit": "bar", "confidence": 0.9},
+            {"name": "flow_rate_lpm", "value": 14.0, "unit": None, "confidence": 0.95},
         ],
     },
 ]

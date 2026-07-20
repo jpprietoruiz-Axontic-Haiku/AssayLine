@@ -18,7 +18,7 @@ export function UploadForm({ onUploaded }: { onUploaded: (reportId: string) => v
       const report = await uploadReport(file)
       onUploaded(report.id)
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'No se pudo subir el archivo')
+      setError(err instanceof ApiError ? err.message : 'Could not upload the file')
     } finally {
       setBusy(false)
       if (inputRef.current) inputRef.current.value = ''
@@ -28,7 +28,7 @@ export function UploadForm({ onUploaded }: { onUploaded: (reportId: string) => v
   return (
     <div className="upload-form">
       <label className="button button-primary">
-        {busy ? 'Subiendo…' : 'Subir informe'}
+        {busy ? 'Uploading…' : 'Upload report'}
         <input
           ref={inputRef}
           type="file"

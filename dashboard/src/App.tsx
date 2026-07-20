@@ -7,7 +7,7 @@ function App() {
     <div className="app-shell">
       <nav className="app-nav">
         <span className="app-brand">AssayLine</span>
-        <span className="app-tagline">Revisión de informes técnicos</span>
+        <span className="app-tagline">Technical report review</span>
       </nav>
       <main>
         <Routes>

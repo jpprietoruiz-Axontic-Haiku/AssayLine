@@ -1,185 +1,186 @@
-# Decisiones de diseño
+# Design decisions
 
-Notas de por qué el sistema está construido como está, no solo qué hace. Cada
-sección es una decisión con su alternativa descartada y el motivo.
+Notes on why the system is built the way it is, not just what it does. Each
+section is a decision with the alternative that was discarded and the
+reasoning behind it.
 
-## 1. Tool-calling en vez de extracción directa (un solo prompt pidiendo JSON)
+## 1. Tool-calling instead of direct extraction (a single prompt asking for JSON)
 
-**Alternativa descartada:** un único prompt a un LLM con visión, "aquí tienes
-el documento, devuélveme este JSON", parseando la respuesta a mano.
+**Discarded alternative:** a single prompt to a vision LLM — "here's the
+document, give me this JSON" — parsing the response by hand.
 
-**Por qué no:** un LLM que solo genera texto no tiene forma de comprobar su
-propio trabajo. Si convierte mal una unidad, o mira el spec range equivocado,
-o suma mal dos valores de una tabla, el error queda enterrado en un blob de
-JSON que parece perfectamente válido. No hay señal de que algo salió mal.
+**Why not:** an LLM that only generates text has no way to check its own
+work. If it converts a unit wrong, or looks at the wrong spec range, or adds
+up two table values incorrectly, the error is buried inside a JSON blob that
+looks perfectly valid. There's no signal that anything went wrong.
 
-**Qué se hizo en su lugar:** el agente ([`app/services/extraction_agent.py`](worker/app/services/extraction_agent.py))
-tiene acceso a herramientas deterministas —`convert_units`, `lookup_spec_profile`,
-`calculate`— que ejecuta código Python real, no al modelo "razonando" aritmética
-en su cabeza. El modelo decide *cuándo* usar cada herramienta y *cómo*
-interpretar el resultado, pero el cálculo en sí es determinista y verificable.
-Esto es exactamente la diferencia entre "el LLM adivina" y "el LLM orquesta
-herramientas confiables". El resultado final se entrega a través de un tool
-call de schema fijo (`submit_extraction`), no de texto libre parseado con
-regex — el modelo no puede devolver un JSON mal formado porque la propia API
-de tool-calling se lo impide.
+**What was done instead:** the agent ([`app/services/extraction_agent.py`](worker/app/services/extraction_agent.py))
+has access to deterministic tools — `convert_units`, `lookup_spec_profile`,
+`calculate` — that run real Python code, instead of the model "doing
+arithmetic" in its head. The model decides *when* to use each tool and *how*
+to interpret the result, but the calculation itself is deterministic and
+verifiable. That's exactly the difference between "the LLM guesses" and "the
+LLM orchestrates trustworthy tools." The final result is delivered through a
+fixed-schema tool call (`submit_extraction`), not free text parsed with
+regex — the model can't return malformed JSON because the tool-calling API
+itself prevents it.
 
-## 2. Validación de esquema por campo, no del documento completo
+## 2. Per-field validation, not whole-document validation
 
-**Alternativa descartada:** un único modelo Pydantic grande por tipo de
-informe (`CertificateOfAnalysis(BaseModel): ph: float; pureza: float; ...`)
-que se valida de una vez.
+**Discarded alternative:** one large Pydantic model per report type
+(`CertificateOfAnalysis(BaseModel): ph: float; purity: float; ...`)
+validated all at once.
 
-**Por qué no:** con validación "todo o nada", un solo campo mal extraído
-(confidence fuera de rango, tipo incorrecto) tira todo el documento a la
-papelera — incluidos los 9 campos que sí se extrajeron bien. Eso es peor que
-inútil para un revisor humano: prefiere ver 9 campos correctos y 1 marcado
-como sospechoso, no "extracción fallida, intenta de nuevo".
+**Why not:** with all-or-nothing validation, a single badly extracted field
+(confidence out of range, wrong type) throws the entire document away —
+including the 9 fields that were extracted correctly. That's worse than
+useless for a human reviewer: they'd rather see 9 correct fields and 1
+flagged as suspicious than "extraction failed, try again."
 
-**Qué se hizo en su lugar:** [`app/schemas/extraction.py`](worker/app/schemas/extraction.py)
-valida cada campo individualmente contra `ExtractedField`. Un campo inválido
-se reporta en `validation_errors` con su motivo; el resto de campos válidos
-se persiste igual. Esto es lo que permite que el dashboard muestre "3 de 4
-campos extraídos, 1 con error de validación" en vez de fallar en bloque.
+**What was done instead:** [`app/schemas/extraction.py`](worker/app/schemas/extraction.py)
+validates each field individually against `ExtractedField`. An invalid field
+is reported in `validation_errors` with its reason; the rest of the valid
+fields are still persisted. This is what lets the dashboard show "3 of 4
+fields extracted, 1 with a validation error" instead of failing in bulk.
 
-## 3. Confidence score por campo, generado por el propio modelo
+## 3. Confidence score per field, generated by the model itself
 
-El agente asigna una confianza (0–1) a cada campo que extrae, con instrucción
-explícita de bajarla cuando el valor es ambiguo o inferido en vez de leído
-directamente. No es una medida objetiva —es la propia autoevaluación del
-modelo— pero es la señal más barata disponible para priorizar qué revisar
-primero en el dashboard sin tener que releer todos los campos por igual.
+The agent assigns a confidence (0–1) to every field it extracts, with an
+explicit instruction to lower it when a value is ambiguous or inferred
+rather than read directly. It's not an objective measure — it's the model's
+own self-assessment — but it's the cheapest available signal for
+prioritizing what to review first in the dashboard, instead of having to
+re-read every field equally.
 
-## 4. Human-in-the-loop como parte central del flujo, no un añadido
+## 4. Human-in-the-loop as a core part of the flow, not an afterthought
 
-**Por qué:** ningún pipeline de extracción con LLM es 100% fiable, y fingir
-que lo es (auto-aprobando todo lo que devuelve el modelo) es la forma más
-rápida de perder la confianza de alguien que trabaja con especificaciones de
-proceso reales. Reconocer la incertidumbre — mostrar confidence, marcar
-anomalías, dejar el documento original al lado del dato extraído para
-comparar de un vistazo — es la propuesta de valor, no una limitación a
-esconder.
+**Why:** no LLM-based extraction pipeline is 100% reliable, and pretending
+it is (auto-approving everything the model returns) is the fastest way to
+lose the trust of someone who works with real process specifications.
+Acknowledging uncertainty — showing confidence, flagging anomalies, keeping
+the original document next to the extracted data for a quick visual
+comparison — is the value proposition, not a limitation to hide.
 
-Por eso `PATCH /reports/{id}/review` no es un endpoint secundario: es donde
-vive la corrección real. Y al aprobar una revisión, el motor de anomalías se
-**recalcula desde cero** contra los valores corregidos (no contra los
-originales) — ver [`app/api/reports.py`](worker/app/api/reports.py), función
-`review_report`. Si no se hiciera esto, una corrección humana que arregla un
-valor fuera de spec dejaría el flag de anomalía "fantasma" en el sistema.
+That's why `PATCH /reports/{id}/review` isn't a secondary endpoint: it's
+where the real correction happens. And when a review is approved, the
+anomaly engine **recomputes from scratch** against the corrected values (not
+the original ones) — see [`app/api/reports.py`](worker/app/api/reports.py),
+function `review_report`. Without this, a human correction that fixes an
+out-of-spec value would leave a "ghost" anomaly flag in the system.
 
-## 5. Clasificación determinista por keywords, no por LLM
+## 5. Deterministic keyword classification, not an LLM
 
-El tipo de informe (`certificate_of_analysis` / `process_log`) se decide con
-un matcher de regex sobre el texto transcrito
-([`app/services/classifier.py`](worker/app/services/classifier.py)), no con
-otra llamada al modelo. Es una decisión binaria/categórica de baja
-ambigüedad sobre texto ya extraído — pedirle a un LLM que la resuelva sería
-gastar latencia y tokens por algo que un `re.search` resuelve en microsegundos
-y sin varianza. El LLM se reserva para donde realmente aporta: razonar sobre
-tablas mal formadas, gráficas, y texto ambiguo durante la extracción de
-campos.
+The report type (`certificate_of_analysis` / `process_log`) is decided with
+a regex matcher over the transcribed text
+([`app/services/classifier.py`](worker/app/services/classifier.py)), not
+another model call. It's a low-ambiguity binary/categorical decision over
+text that has already been extracted — asking an LLM to resolve it would
+burn latency and tokens on something a `re.search` solves in microseconds
+with zero variance. The LLM is reserved for where it actually adds value:
+reasoning over badly formatted tables, charts, and ambiguous text during
+field extraction.
 
-## 6. OCR/visión condicional: solo cuando el PDF no trae texto embebido
+## 6. Conditional OCR/vision: only when the PDF has no embedded text
 
-`app/services/pipeline.py` intenta primero extraer el texto embebido de cada
-página (PyMuPDF); solo si ese texto es sospechosamente corto
-(`MIN_EMBEDDED_TEXT_CHARS`) llama a Claude vision para transcribir la imagen
-de la página. La mayoría de certificados de análisis modernos se generan
-digitalmente y ya traen una capa de texto perfecta — pagar tokens de visión
-para volver a "leer" algo que ya es texto extraíble sería desperdiciar dinero
-y latencia. La visión multimodal se reserva para lo que de verdad la necesita:
-escaneos, fotos de operario, y gráficas.
+`app/services/pipeline.py` first tries to extract each page's embedded text
+(PyMuPDF); only if that text is suspiciously short
+(`MIN_EMBEDDED_TEXT_CHARS`) does it call Claude vision to transcribe the
+page image. Most modern certificates of analysis are generated digitally and
+already carry a perfect text layer — paying for vision tokens to "read"
+something that's already extractable text would waste money and latency.
+Multimodal vision is reserved for what actually needs it: scans, operator
+photos, and charts.
 
-## 7. Redis + RQ para la cola de jobs (vs. jobs respaldados en Postgres)
+## 7. Redis + RQ for the job queue (vs. jobs backed by Postgres)
 
-**Alternativa considerada:** una tabla `jobs` en Postgres con
-`SELECT ... FOR UPDATE SKIP LOCKED`, evitando un servicio adicional.
+**Alternative considered:** a `jobs` table in Postgres with
+`SELECT ... FOR UPDATE SKIP LOCKED`, avoiding an extra service.
 
-**Por qué Redis+RQ igual:** el pipeline de un informe puede tardar (varias
-llamadas a Claude, potencialmente varias páginas), así que reintentos,
-timeouts de visibilidad y colas separadas por prioridad importan desde el
-día uno — construir eso a mano sobre Postgres es reinventar RQ con más
-código propio que mantener. Además, el target de despliegue (Railway) ya
-provee Redis gestionado junto al worker, así que no es infraestructura extra
-real, es la misma pieza que hacía falta de todos modos.
+**Why Redis+RQ anyway:** processing a report can take a while (multiple
+Claude calls, potentially multiple pages), so retries, visibility timeouts,
+and priority-separated queues matter from day one — building that by hand on
+top of Postgres means reinventing RQ with more homegrown code to maintain.
+Also, the deployment target (Railway) already provides managed Redis
+alongside the worker, so it isn't really extra infrastructure — it's the
+same piece that was needed anyway.
 
-## 8. Alembic + SQLAlchemy como única fuente de verdad del schema
+## 8. Alembic + SQLAlchemy as the single source of truth for the schema
 
-El hito 1 arrancó con una migración SQL escrita a mano. Se reemplazó en el
-hito 2 por modelos SQLAlchemy ([`app/models/`](worker/app/models/)) + una
-migración de Alembic generada a partir de ellos. Mantener el SQL y el ORM
-como dos fuentes separadas garantiza que en algún momento diverjan
-silenciosamente; con Alembic hay un solo lugar donde el schema vive y una
-sola forma de evolucionarlo (`alembic revision` + `alembic upgrade`).
+Milestone 1 started with a hand-written SQL migration. It was replaced in
+milestone 2 by SQLAlchemy models ([`app/models/`](worker/app/models/)) + an
+Alembic migration generated from them. Keeping SQL and the ORM as two
+separate sources of truth guarantees they eventually drift silently; with
+Alembic there's a single place where the schema lives and a single way to
+evolve it (`alembic revision` + `alembic upgrade`).
 
-## 9. SQLite en tests, Postgres en producción
+## 9. SQLite in tests, Postgres in production
 
-Los tests usan SQLite en archivo temporal (ver `worker/tests/conftest.py`)
-en vez de levantar un Postgres real. Los modelos usan tipos genéricos de
-SQLAlchemy (`Uuid`, `JSON().with_variant(JSONB, "postgresql")`) que se
-comportan igual en ambos dialectos para lo que el código realmente usa
-(CRUD + filtros simples, nada de funciones específicas de Postgres). El
-trade-off consciente: se gana una suite de tests que corre en cualquier
-máquina sin Docker, en segundos, sin estado compartido entre tests — a
-cambio de no probar comportamiento Postgres-específico (constraints exactos,
-locking) en CI. Para este proyecto, ese comportamiento se considera de bajo
-riesgo frente al valor de tests rápidos y deterministas; la migración de
-Alembic se verifica por separado en modo offline (`alembic upgrade head --sql`)
-para confirmar que el DDL generado es válido para Postgres.
+Tests use a temporary-file SQLite database (see `worker/tests/conftest.py`)
+instead of spinning up a real Postgres. The models use generic SQLAlchemy
+types (`Uuid`, `JSON().with_variant(JSONB, "postgresql")`) that behave the
+same across both dialects for what the code actually uses (CRUD + simple
+filters, nothing Postgres-specific). The conscious trade-off: a test suite
+that runs on any machine without Docker, in seconds, with no shared state
+between tests — at the cost of not exercising Postgres-specific behavior
+(exact constraints, locking) in CI. For this project, that behavior is
+considered low-risk relative to the value of fast, deterministic tests; the
+Alembic migration is verified separately in offline mode
+(`alembic upgrade head --sql`) to confirm the generated DDL is valid for
+Postgres.
 
-## 10. Severidad de anomalía por desviación relativa al ancho del rango
+## 10. Anomaly severity by deviation relative to the range width
 
-`app/services/anomaly_engine.py` clasifica una anomalía como `critical` si
-el valor se desvía más de un 15% del ancho del rango spec (`max - min`), y
-`warning` en caso contrario. Es una heurística de demo explícitamente
-documentada como tal en el código — no pretende ser un criterio regulatorio.
-La decisión de diseño real es que la severidad se calcule con una fórmula,
-no con un LLM: es exactamente el tipo de comparación numérica donde un
-modelo puede alucinar sutilmente, y donde una función pura es más barata,
-más rápida y 100% auditable.
+`app/services/anomaly_engine.py` classifies an anomaly as `critical` if the
+value deviates more than 15% of the spec range's width (`max - min`), and
+`warning` otherwise. It's a demo-grade heuristic, explicitly documented as
+such in the code — it's not meant to be a regulatory criterion. The real
+design decision is that severity is computed with a formula, not an LLM:
+this is exactly the kind of numeric comparison where a model can subtly
+hallucinate, and where a pure function is cheaper, faster, and 100%
+auditable.
 
-## 11. Unidades normalizadas antes de comparar contra spec
+## 11. Units normalized before comparing against spec
 
-Si un campo extraído trae una unidad distinta a la del spec_profile
-(`6000 mg` extraído vs. spec en `g`), el motor de anomalías convierte antes
-de comparar (reutilizando la misma herramienta `convert_units` del agente de
-extracción). Si la conversión no es posible (unidades de dimensiones
-distintas), el campo se **omite** en vez de compararse a ciegas — un falso
-"todo en orden" por comparar peras con manzanas es peor que no flaggear nada.
+If an extracted field carries a different unit than the spec profile
+(`6000 mg` extracted vs. a spec in `g`), the anomaly engine converts before
+comparing (reusing the same `convert_units` tool the extraction agent uses).
+If the conversion isn't possible (units of different dimensions), the field
+is **skipped** instead of being compared blindly — a false "all good" from
+comparing apples to oranges is worse than not flagging anything at all.
 
-## 12. Datos de demo con extracción precomputada, no generados en vivo
+## 12. Demo data with pre-computed extractions, not generated live
 
-Los 4 informes sintéticos de [`app/demo/data.py`](worker/app/demo/data.py)
-traen su extracción ya resuelta a mano, no se re-extraen con el LLM cada vez
-que se siembra la demo. Sembrar la demo es una operación que puede correr en
-cualquier entorno (CI, onboarding de un nuevo dev, redeploy) — hacerla
-depender de una API key de Anthropic y de tokens reales cada vez sería
-frágil y con costo recurrente por nada. El motor de anomalías sí corre en
-vivo contra esos datos (no está hardcodeado), así que la demo sigue
-demostrando el pipeline real de comparación y flagging.
+The 4 synthetic reports in [`app/demo/data.py`](worker/app/demo/data.py)
+come with their extraction already resolved by hand — they aren't
+re-extracted with the LLM every time the demo is seeded. Seeding the demo is
+an operation that can run in any environment (CI, a new dev's onboarding,
+a redeploy) — making it depend on a live Anthropic API key and real tokens
+every time would be fragile and carry a recurring cost for no reason. The
+anomaly engine does run live against that data (it isn't hardcoded), so the
+demo still exercises the real comparison-and-flagging pipeline.
 
-## 13. Almacenamiento de archivos: disco local, no object storage
+## 13. File storage: local disk, not object storage
 
-`STORAGE_DIR` es un directorio local (montable como volumen persistente en
-Railway). Para el alcance de este proyecto —un solo worker, sin necesidad de
-escalar horizontalmente— añadir S3/R2 hubiera sido complejidad sin beneficio
-inmediato. Si el proyecto necesitara múltiples workers o instancias
-efímeras, esto es lo primero que migraría a object storage; `app/services/storage.py`
-ya aísla todo el acceso a disco detrás de una interfaz pequeña, así que ese
-cambio no debería tocar el resto del pipeline.
+`STORAGE_DIR` is a local directory (mountable as a persistent volume on
+Railway). For this project's scope — a single worker, no need to scale
+horizontally — adding S3/R2 would have been complexity without immediate
+benefit. If the project ever needed multiple workers or ephemeral instances,
+this is the first thing that would migrate to object storage;
+`app/services/storage.py` already isolates all disk access behind a small
+interface, so that change shouldn't touch the rest of the pipeline.
 
-## 14. Qué falta para ser "producción de verdad" (limitaciones honestas)
+## 14. What's missing for "real production" (honest limitations)
 
-- **Sin autenticación/autorización.** Cualquiera con la URL puede subir,
-  revisar y exportar informes. Para un despliegue real haría falta al menos
-  un login básico y, probablemente, scoping por organización.
-- **Un solo worker RQ, sin dead-letter queue.** Un job que falla se marca
-  `failed` en `reports.status` con el error en `error_message`, pero no hay
-  reintentos automáticos ni alerta operativa.
-- **El agente de extracción no soporta gráficas complejas de verdad.** El
-  prompt de visión pide describir curvas/gráficas, pero no hay un caso de
-  prueba end-to-end con una gráfica real extrayendo puntos numéricos — es la
-  parte del blueprint original menos verificada.
-- **Sin versionado de spec_profiles.** Si una especificación cambia, se
-  edita la fila existente; no queda auditoría de "qué spec estaba vigente
-  cuando se evaluó este informe".
+- **No authentication/authorization.** Anyone with the URL can upload,
+  review, and export reports. A real deployment would need at least basic
+  login and, likely, scoping by organization.
+- **A single RQ worker, no dead-letter queue.** A failed job is marked
+  `failed` on `reports.status` with the error in `error_message`, but there
+  are no automatic retries or operational alerting.
+- **The extraction agent doesn't truly support complex charts.** The vision
+  prompt asks it to describe curves/charts, but there's no end-to-end test
+  case with a real chart extracting numeric data points — it's the least
+  verified part of the original blueprint.
+- **No versioning of `spec_profiles`.** If a specification changes, the
+  existing row is edited in place; there's no audit trail of "which spec
+  was in effect when this report was evaluated."

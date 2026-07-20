@@ -13,25 +13,25 @@ logger = logging.getLogger(__name__)
 MAX_TOOL_ITERATIONS = 8
 
 SYSTEM_PROMPT = (
-    "Eres un extractor de datos para informes tecnicos industriales/de laboratorio "
-    "(certificados de analisis, logs de proceso). Se te da el tipo de informe y el "
-    "texto transcrito de sus paginas. Identifica cada campo medible (ej. pH, pureza, "
-    "temperatura, lote, fecha) y su valor.\n\n"
-    "Usa las herramientas cuando ayuden a tu razonamiento: lookup_spec_profile para "
-    "saber que unidad se espera y si un valor luce fuera de rango, convert_units para "
-    "normalizar unidades, calculate para aritmetica (promedios, diferencias). No "
-    "inventes valores que no esten en el texto. Cuando termines, LLAMA a "
-    "submit_extraction exactamente una vez con todos los campos encontrados. Asigna "
-    "confidence baja (< 0.5) a cualquier campo que hayas tenido que inferir o que sea "
-    "ambiguo en el texto original."
+    "You are a data extractor for industrial/laboratory technical reports "
+    "(certificates of analysis, process logs). You are given the report type and "
+    "the transcribed text of its pages. Identify every measurable field (e.g. pH, "
+    "purity, temperature, batch, date) and its value.\n\n"
+    "Use the tools whenever they help your reasoning: lookup_spec_profile to know "
+    "which unit is expected and whether a value looks out of range, convert_units "
+    "to normalize units, calculate for arithmetic (averages, differences). Do not "
+    "invent values that are not in the text. When you are done, CALL "
+    "submit_extraction exactly once with every field you found. Assign low "
+    "confidence (< 0.5) to any field you had to infer or that is ambiguous in the "
+    "source text."
 )
 
 TOOL_DEFS: list[dict[str, Any]] = [
     {
         "name": "convert_units",
         "description": (
-            "Convierte un valor numerico entre unidades "
-            "(masa, volumen, concentracion, presion, temperatura)."
+            "Converts a numeric value between units "
+            "(mass, volume, concentration, pressure, temperature)."
         ),
         "input_schema": {
             "type": "object",
@@ -46,8 +46,8 @@ TOOL_DEFS: list[dict[str, Any]] = [
     {
         "name": "lookup_spec_profile",
         "description": (
-            "Busca el rango de especificacion (min, max, unit) "
-            "para un campo de un tipo de informe."
+            "Looks up the specification range (min, max, unit) "
+            "for a field of a given report type."
         ),
         "input_schema": {
             "type": "object",
@@ -60,7 +60,7 @@ TOOL_DEFS: list[dict[str, Any]] = [
     },
     {
         "name": "calculate",
-        "description": "Evalua una expresion aritmetica (+ - * / ** parentesis).",
+        "description": "Evaluates an arithmetic expression (+ - * / ** parentheses).",
         "input_schema": {
             "type": "object",
             "properties": {"expression": {"type": "string"}},
@@ -70,8 +70,8 @@ TOOL_DEFS: list[dict[str, Any]] = [
     {
         "name": "submit_extraction",
         "description": (
-            "Registra el resultado final de la extraccion. "
-            "Llamar exactamente una vez, al terminar."
+            "Records the final extraction result. "
+            "Call exactly once, when finished."
         ),
         "input_schema": {
             "type": "object",
@@ -106,8 +106,8 @@ def _get_client() -> anthropic.Anthropic:
 
 
 def _build_user_prompt(report_type: str, transcripts: list[str]) -> str:
-    pages = "\n\n".join(f"--- pagina {i} ---\n{text}" for i, text in enumerate(transcripts))
-    return f"Tipo de informe: {report_type}\n\n{pages}"
+    pages = "\n\n".join(f"--- page {i} ---\n{text}" for i, text in enumerate(transcripts))
+    return f"Report type: {report_type}\n\n{pages}"
 
 
 def _execute_tool(db: Session, report_type: str, name: str, tool_input: dict[str, Any]) -> Any:

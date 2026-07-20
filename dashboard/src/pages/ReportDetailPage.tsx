@@ -39,7 +39,7 @@ export function ReportDetailPage() {
         return next
       })
     } catch {
-      setError('No se pudo cargar el informe.')
+      setError('Could not load the report.')
     }
   }, [id])
 
@@ -76,7 +76,7 @@ export function ReportDetailPage() {
       const updated = await reviewReport(id, edits, approve)
       setDetail(updated)
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'No se pudo guardar la revisión.')
+      setError(err instanceof ApiError ? err.message : 'Could not save the review.')
     } finally {
       setSaving(false)
     }
@@ -87,14 +87,14 @@ export function ReportDetailPage() {
     try {
       await downloadExport(id, format, detail.filename.replace(/\.[^.]+$/, ''))
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'No se pudo exportar el informe.')
+      setError(err instanceof ApiError ? err.message : 'Could not export the report.')
     }
   }
 
   if (error && !detail) {
     return (
       <div className="page">
-        <Link to="/">&larr; Volver</Link>
+        <Link to="/">&larr; Back</Link>
         <p className="error-text">{error}</p>
       </div>
     )
@@ -103,8 +103,8 @@ export function ReportDetailPage() {
   if (!detail) {
     return (
       <div className="page">
-        <Link to="/">&larr; Volver</Link>
-        <p>Cargando…</p>
+        <Link to="/">&larr; Back</Link>
+        <p>Loading…</p>
       </div>
     )
   }
@@ -113,12 +113,12 @@ export function ReportDetailPage() {
 
   return (
     <div className="page">
-      <Link to="/">&larr; Volver a informes</Link>
+      <Link to="/">&larr; Back to reports</Link>
       <header className="page-header">
         <div>
           <h1>{detail.filename}</h1>
           <p className="page-subtitle">
-            {detail.report_type ?? 'Sin clasificar'} · <StatusBadge status={detail.status} />{' '}
+            {detail.report_type ?? 'Unclassified'} · <StatusBadge status={detail.status} />{' '}
             <AnomalyCountBadge
               count={detail.anomalies.length}
               hasCritical={detail.anomalies.some((a) => a.severity === 'critical')}
@@ -131,48 +131,48 @@ export function ReportDetailPage() {
             onClick={() => handleExport('csv')}
             disabled={!detail.extraction}
           >
-            Exportar CSV
+            Export CSV
           </button>
           <button
             className="button"
             onClick={() => handleExport('json')}
             disabled={!detail.extraction}
           >
-            Exportar JSON
+            Export JSON
           </button>
         </div>
       </header>
 
       {detail.status === 'failed' && (
-        <p className="error-text">Error de procesamiento: {detail.error_message}</p>
+        <p className="error-text">Processing error: {detail.error_message}</p>
       )}
       {error && <p className="error-text">{error}</p>}
 
       <div className="detail-grid">
         <div className="panel">
-          <h2>Documento original</h2>
+          <h2>Original document</h2>
           {isPdf(detail.filename) ? (
             <iframe
               className="original-viewer"
               src={originalDocumentUrl(detail.id)}
-              title="Documento original"
+              title="Original document"
             />
           ) : (
             <img
               className="original-viewer"
               src={originalDocumentUrl(detail.id)}
-              alt="Documento original"
+              alt="Original document"
             />
           )}
         </div>
 
         <div className="panel">
-          <h2>Datos extraídos</h2>
+          <h2>Extracted data</h2>
 
-          {!detail.extraction && <p>Todavía no hay datos extraídos para este informe.</p>}
+          {!detail.extraction && <p>No extracted data for this report yet.</p>}
 
           {detail.extraction && fields.length === 0 && (
-            <p className="empty-state">El agente no extrajo campos de este informe.</p>
+            <p className="empty-state">The agent did not extract any fields from this report.</p>
           )}
 
           {detail.extraction && fields.length > 0 && (
@@ -180,11 +180,11 @@ export function ReportDetailPage() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Campo</th>
-                    <th>Valor</th>
-                    <th>Unidad</th>
-                    <th>Confianza</th>
-                    <th>Anomalía</th>
+                    <th>Field</th>
+                    <th>Value</th>
+                    <th>Unit</th>
+                    <th>Confidence</th>
+                    <th>Anomaly</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -208,7 +208,7 @@ export function ReportDetailPage() {
                         </td>
                         <td>
                           {anomaly ? (
-                            <span title={`Esperado: ${anomaly.expected_range}`}>
+                            <span title={`Expected: ${anomaly.expected_range}`}>
                               <SeverityBadge severity={anomaly.severity} />
                             </span>
                           ) : (
@@ -223,7 +223,7 @@ export function ReportDetailPage() {
 
               {detail.extraction.validation_errors.length > 0 && (
                 <div className="validation-errors">
-                  <h3>Errores de validación</h3>
+                  <h3>Validation errors</h3>
                   <ul>
                     {detail.extraction.validation_errors.map((err, i) => (
                       <li key={i}>{JSON.stringify(err)}</li>
@@ -238,14 +238,14 @@ export function ReportDetailPage() {
                   onClick={() => handleSave(false)}
                   disabled={saving || detail.status === 'reviewed'}
                 >
-                  {saving ? 'Guardando…' : 'Guardar cambios'}
+                  {saving ? 'Saving…' : 'Save changes'}
                 </button>
                 <button
                   className="button button-primary"
                   onClick={() => handleSave(true)}
                   disabled={saving || detail.status === 'reviewed'}
                 >
-                  {saving ? 'Guardando…' : 'Aprobar y marcar revisado'}
+                  {saving ? 'Saving…' : 'Approve and mark reviewed'}
                 </button>
               </div>
             </>

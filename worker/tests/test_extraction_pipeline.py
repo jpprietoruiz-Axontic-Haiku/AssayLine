@@ -9,7 +9,7 @@ def test_extraction_validation_errors_are_reported_per_field_without_dropping_va
         lambda *a, **k: {
             "fields": [
                 {"name": "ph", "value": 7.2, "unit": None, "confidence": 0.9},
-                {"name": "pureza", "value": 99.5, "unit": "%", "confidence": 1.5},  # out of range
+                {"name": "purity", "value": 99.5, "unit": "%", "confidence": 1.5},  # out of range
             ]
         },
     )
@@ -23,8 +23,8 @@ def test_extraction_validation_errors_are_reported_per_field_without_dropping_va
     detail = client.get(f"/reports/{report_id}").json()
     assert detail["status"] == "extracted"
     assert detail["extraction"]["data"]["ph"]["value"] == 7.2
-    assert "pureza" not in detail["extraction"]["data"]
-    assert any(e["field"] == "pureza" for e in detail["extraction"]["validation_errors"])
+    assert "purity" not in detail["extraction"]["data"]
+    assert any(e["field"] == "purity" for e in detail["extraction"]["validation_errors"])
 
 
 def test_extraction_degrades_gracefully_when_agent_never_submits(client, monkeypatch) -> None:

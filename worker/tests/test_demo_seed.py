@@ -16,7 +16,7 @@ def test_render_text_pdf_roundtrips_embedded_text() -> None:
         pages = document.extract_pages(path)
 
     assert len(pages) == 1
-    assert "CERTIFICADO DE ANALISIS" in pages[0].embedded_text
+    assert "CERTIFICATE OF ANALYSIS" in pages[0].embedded_text
     assert "7.1" in pages[0].embedded_text
 
 

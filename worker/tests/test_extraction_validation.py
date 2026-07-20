@@ -14,15 +14,15 @@ def test_valid_fields_pass_through() -> None:
 def test_invalid_field_is_reported_without_dropping_valid_siblings() -> None:
     raw = [
         {"name": "ph", "value": 7.2, "unit": None, "confidence": 0.9},
-        {"name": "pureza", "value": 99.5, "unit": "%", "confidence": 1.5},
+        {"name": "purity", "value": 99.5, "unit": "%", "confidence": 1.5},
     ]
 
     valid, errors = validate_fields(raw)
 
     assert "ph" in valid
-    assert "pureza" not in valid
+    assert "purity" not in valid
     assert len(errors) == 1
-    assert errors[0]["field"] == "pureza"
+    assert errors[0]["field"] == "purity"
 
 
 def test_missing_required_key_is_reported() -> None:

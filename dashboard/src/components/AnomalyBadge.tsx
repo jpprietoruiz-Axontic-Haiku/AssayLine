@@ -8,16 +8,16 @@ export function AnomalyCountBadge({
   hasCritical: boolean
 }) {
   if (count === 0) {
-    return <span className="badge badge-ok">Sin anomalías</span>
+    return <span className="badge badge-ok">No anomalies</span>
   }
   return (
     <span className={`badge ${hasCritical ? 'badge-critical' : 'badge-warning'}`}>
-      {count} {count === 1 ? 'anomalía' : 'anomalías'}
+      {count} {count === 1 ? 'anomaly' : 'anomalies'}
     </span>
   )
 }
 
 export function SeverityBadge({ severity }: { severity: AnomalySeverity }) {
-  const label = severity === 'critical' ? 'Crítico' : 'Advertencia'
+  const label = severity === 'critical' ? 'Critical' : 'Warning'
   return <span className={`badge badge-${severity}`}>{label}</span>
 }

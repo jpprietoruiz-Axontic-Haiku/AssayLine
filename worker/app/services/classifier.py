@@ -4,15 +4,13 @@ UNKNOWN_REPORT_TYPE = "unknown"
 
 _KEYWORD_PATTERNS: dict[str, list[str]] = {
     "certificate_of_analysis": [
-        r"certificado\s+de\s+an[aá]lisis",
         r"certificate\s+of\s+analysis",
         r"\bcoa\b",
     ],
     "process_log": [
-        r"log\s+de\s+proceso",
         r"process\s+log",
-        r"registro\s+de\s+proceso",
-        r"par[aá]metros\s+de\s+proceso",
+        r"process\s+record",
+        r"process\s+parameters",
     ],
 }
 
