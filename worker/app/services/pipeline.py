@@ -6,9 +6,10 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.db import get_session_factory
-from app.models import Extraction, Report
+from app.models import Anomaly, Extraction, Report
 from app.schemas.extraction import validate_fields
 from app.services import classifier, document, storage, vision
+from app.services.anomaly_engine import detect_anomalies
 from app.services.extraction_agent import run_extraction_agent
 
 logger = logging.getLogger(__name__)
@@ -77,5 +78,18 @@ def _extract(db: Session, report: Report, transcripts: list[str]) -> None:
         validation_errors=errors,
     )
     db.add(extraction)
+    db.flush()
+
+    for anomaly in detect_anomalies(db, report_type, extraction.data):
+        db.add(
+            Anomaly(
+                report_id=report.id,
+                field=anomaly.field,
+                value=anomaly.value,
+                expected_range=anomaly.expected_range,
+                severity=anomaly.severity,
+            )
+        )
+
     report.status = "extracted"
     db.commit()

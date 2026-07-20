@@ -55,6 +55,7 @@ pip install -e ".[dev]"
 alembic upgrade head            # crea el schema en Postgres
 uvicorn app.main:app --reload   # API en :8000
 rq worker ingestion --url redis://localhost:6379/0   # worker de ingesta (otra terminal)
+python -m scripts.seed_demo   # siembra spec_profiles + 4 informes demo ya extraidos
 
 cd ../dashboard
 npm install
@@ -73,6 +74,6 @@ cd dashboard && npm run build   # incluye typecheck (tsc -b)
 1. [x] Scaffolding monorepo + schema Postgres + docker-compose + CI
 2. [x] Ingesta: `POST /reports` + clasificación + OCR/visión
 3. [x] Agente de extracción con tool-calling + validación Pydantic
-4. [ ] Motor de anomalías + informes sintéticos de demo
+4. [x] Motor de anomalías + informes sintéticos de demo
 5. [ ] Dashboard de revisión (lado a lado, edición inline, export)
 6. [ ] README senior + diagrama Mermaid + `DECISIONS.md`
