@@ -75,5 +75,5 @@ cd dashboard && npm run build   # incluye typecheck (tsc -b)
 2. [x] Ingesta: `POST /reports` + clasificación + OCR/visión
 3. [x] Agente de extracción con tool-calling + validación Pydantic
 4. [x] Motor de anomalías + informes sintéticos de demo
-5. [ ] Dashboard de revisión (lado a lado, edición inline, export)
+5. [x] Dashboard de revisión (lado a lado, edición inline, export)
 6. [ ] README senior + diagrama Mermaid + `DECISIONS.md`

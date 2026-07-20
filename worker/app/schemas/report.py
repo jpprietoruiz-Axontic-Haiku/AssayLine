@@ -50,3 +50,8 @@ class AnomalyOut(BaseModel):
 class ReportDetail(ReportOut):
     extraction: ExtractionOut | None = None
     anomalies: list[AnomalyOut] = []
+
+
+class ReportListItem(ReportOut):
+    anomaly_count: int = 0
+    has_critical_anomaly: bool = False

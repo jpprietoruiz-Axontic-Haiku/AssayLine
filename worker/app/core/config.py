@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     min_embedded_text_chars: int = 40
     anthropic_vision_model: str = "claude-sonnet-5"
     anthropic_agent_model: str = "claude-sonnet-5"
+    cors_allow_origins: str = "http://localhost:5173"
+
+    @property
+    def cors_allow_origins_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_allow_origins.split(",") if origin.strip()]
 
 
 @lru_cache
