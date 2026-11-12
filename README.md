@@ -1,5 +1,7 @@
 # AssayLine
 
+> **Hiring manager / technical reviewer?** Read the [2-minute technical overview](REVIEWER_GUIDE.md) for code pointers, capabilities and limitations.
+
 Agentic pipeline that turns messy industrial/lab technical reports (PDF,
 scans, photos, badly formatted tables) into structured, validated data,
 flags out-of-specification anomalies, and supports **human-in-the-loop**
